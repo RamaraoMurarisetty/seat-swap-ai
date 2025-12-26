@@ -6,93 +6,114 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 217 33% 17%;
+    --background: 210 25% 97%;
+    --foreground: 220 40% 13%;
 
     --card: 0 0% 100%;
-    --card-foreground: 217 33% 17%;
+    --card-foreground: 220 40% 13%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 217 33% 17%;
+    --popover-foreground: 220 40% 13%;
 
-    --primary: 217 70% 30%;
+    /* Primary - Rich Railway Blue */
+    --primary: 215 80% 35%;
     --primary-foreground: 0 0% 100%;
+    --primary-light: 215 75% 50%;
+    --primary-dark: 215 85% 25%;
 
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 217 33% 17%;
+    --secondary: 210 30% 94%;
+    --secondary-foreground: 220 40% 13%;
 
-    --muted: 210 20% 94%;
-    --muted-foreground: 217 20% 45%;
+    --muted: 210 25% 92%;
+    --muted-foreground: 220 20% 45%;
 
-    --accent: 25 90% 55%;
+    /* Accent - Vibrant Red/Crimson */
+    --accent: 0 75% 50%;
     --accent-foreground: 0 0% 100%;
+    --accent-light: 0 70% 60%;
+    --accent-dark: 0 80% 40%;
 
-    --success: 142 70% 40%;
+    /* Success - Green */
+    --success: 145 65% 40%;
     --success-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 51%;
+    /* Warning - Amber/Orange */
+    --warning: 38 90% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Destructive - Deep Red */
+    --destructive: 0 70% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 217 70% 30%;
+    --border: 215 30% 88%;
+    --input: 215 30% 88%;
+    --ring: 215 80% 35%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 215 80% 35%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 215 80% 35%;
+    --sidebar-accent: 215 75% 45%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 215 70% 45%;
+    --sidebar-ring: 0 75% 50%;
 
     /* Custom gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(217, 70%, 30%) 0%, hsl(217, 70%, 45%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(25, 90%, 55%) 0%, hsl(25, 90%, 65%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(217, 70%, 25%) 0%, hsl(217, 70%, 40%) 50%, hsl(217, 60%, 50%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(210, 20%, 98%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(215, 85%, 25%) 0%, hsl(215, 80%, 45%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(0, 80%, 45%) 0%, hsl(0, 75%, 55%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(215, 85%, 20%) 0%, hsl(215, 80%, 35%) 50%, hsl(215, 75%, 50%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(210, 25%, 97%) 100%);
+    --gradient-mixed: linear-gradient(135deg, hsl(215, 80%, 35%) 0%, hsl(0, 75%, 50%) 100%);
 
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(217 33% 17% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(217 33% 17% / 0.1), 0 2px 4px -2px hsl(217 33% 17% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(217 33% 17% / 0.1), 0 4px 6px -4px hsl(217 33% 17% / 0.1);
-    --shadow-xl: 0 20px 25px -5px hsl(217 33% 17% / 0.1), 0 8px 10px -6px hsl(217 33% 17% / 0.1);
-    --shadow-glow: 0 0 40px hsl(217 70% 30% / 0.2);
+    --shadow-sm: 0 1px 2px 0 hsl(220 40% 13% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(220 40% 13% / 0.1), 0 2px 4px -2px hsl(220 40% 13% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(220 40% 13% / 0.1), 0 4px 6px -4px hsl(220 40% 13% / 0.1);
+    --shadow-xl: 0 20px 25px -5px hsl(220 40% 13% / 0.1), 0 8px 10px -6px hsl(220 40% 13% / 0.1);
+    --shadow-glow: 0 0 40px hsl(215 80% 35% / 0.25);
+    --shadow-glow-accent: 0 0 40px hsl(0 75% 50% / 0.25);
   }
 
   .dark {
-    --background: 217 33% 8%;
-    --foreground: 210 20% 98%;
+    --background: 220 35% 8%;
+    --foreground: 210 25% 97%;
 
-    --card: 217 33% 12%;
-    --card-foreground: 210 20% 98%;
+    --card: 220 35% 12%;
+    --card-foreground: 210 25% 97%;
 
-    --popover: 217 33% 12%;
-    --popover-foreground: 210 20% 98%;
+    --popover: 220 35% 12%;
+    --popover-foreground: 210 25% 97%;
 
-    --primary: 217 70% 50%;
+    --primary: 215 75% 55%;
     --primary-foreground: 0 0% 100%;
+    --primary-light: 215 70% 65%;
+    --primary-dark: 215 80% 45%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 20% 98%;
+    --secondary: 220 35% 18%;
+    --secondary-foreground: 210 25% 97%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 220 35% 18%;
+    --muted-foreground: 215 25% 65%;
 
-    --accent: 25 90% 55%;
+    --accent: 0 70% 55%;
     --accent-foreground: 0 0% 100%;
+    --accent-light: 0 65% 65%;
+    --accent-dark: 0 75% 45%;
 
-    --success: 142 70% 45%;
+    --success: 145 60% 45%;
     --success-foreground: 0 0% 100%;
 
-    --destructive: 0 62% 30%;
+    --warning: 38 85% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 65% 40%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 217 70% 50%;
+    --border: 220 35% 22%;
+    --input: 220 35% 22%;
+    --ring: 215 75% 55%;
   }
 }
 
@@ -124,12 +145,27 @@
     background: var(--gradient-card);
   }
 
+  .gradient-mixed {
+    background: var(--gradient-mixed);
+  }
+
   .shadow-glow {
     box-shadow: var(--shadow-glow);
   }
 
+  .shadow-glow-accent {
+    box-shadow: var(--shadow-glow-accent);
+  }
+
   .text-gradient {
     background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-mixed {
+    background: var(--gradient-mixed);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

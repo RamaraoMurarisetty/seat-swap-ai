@@ -1,12 +1,27 @@
+import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Train } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ExchangeForm from "@/components/exchange/ExchangeForm";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Exchange = () => {
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+    }
+  }, [isAuthenticated, navigate]);
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <>
       <Helmet>
@@ -29,9 +44,9 @@ const Exchange = () => {
             
             <div className="container relative">
               <Button asChild variant="ghost" className="mb-6 text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground">
-                <Link to="/" className="gap-2">
+                <Link to="/dashboard" className="gap-2">
                   <ArrowLeft className="h-4 w-4" />
-                  Back to Home
+                  Back to Dashboard
                 </Link>
               </Button>
               
@@ -44,7 +59,7 @@ const Exchange = () => {
                     Seat Exchange Request
                   </h1>
                   <p className="text-primary-foreground/80">
-                    Get AI prediction for your exchange acceptance
+                    Find passengers likely to accept your exchange
                   </p>
                 </div>
               </div>

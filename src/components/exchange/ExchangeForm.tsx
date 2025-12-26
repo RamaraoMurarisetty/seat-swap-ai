@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -10,9 +9,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
-
-const API_BASE_URL = "http://127.0.0.1:5000";
+import PredictionResult from "./PredictionResult";
 
 const formSchema = z.object({
   genderMatch: z.boolean(),
@@ -24,11 +21,15 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+interface PredictionResponse {
+  acceptance_probability: number;
+  decision: string;
+}
+
 const ExchangeForm = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState<PredictionResponse | null>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
-  const navigate = useNavigate();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -42,26 +43,16 @@ const ExchangeForm = () => {
   });
 
   const onSubmit = async (data: FormValues) => {
-    if (!user?.user_id) {
-      toast({
-        title: "Authentication Required",
-        description: "Please login to submit a request.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
+    setResult(null);
 
     try {
-      // Submit seat exchange request
-      const submitResponse = await fetch(`${API_BASE_URL}/submit_request`, {
+      const response = await fetch("http://127.0.0.1:5000/predict", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_id: user.user_id,
           gender_match: data.genderMatch ? 1 : 0,
           seat_upgrade: data.seatUpgrade ? 1 : 0,
           coach_distance: data.coachDistance,
@@ -70,22 +61,16 @@ const ExchangeForm = () => {
         }),
       });
 
-      if (!submitResponse.ok) {
-        const errorData = await submitResponse.json();
-        throw new Error(errorData.message || "Failed to submit request");
+      if (!response.ok) {
+        throw new Error("Failed to get prediction");
       }
 
-      toast({
-        title: "Request Submitted",
-        description: "Finding exchange matches for you...",
-      });
-
-      // Navigate to matches page to see results
-      navigate("/matches");
+      const result: PredictionResponse = await response.json();
+      setResult(result);
     } catch (error) {
       toast({
         title: "Connection Error",
-        description: error instanceof Error ? error.message : "Could not connect to the server. Please ensure the Flask API is running.",
+        description: "Could not connect to the prediction server. Please ensure the Flask API is running.",
         variant: "destructive",
       });
     } finally {
@@ -99,7 +84,7 @@ const ExchangeForm = () => {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Exchange Request Details</CardTitle>
           <CardDescription>
-            Fill in the details below to find passengers willing to exchange seats with you.
+            Fill in the details below to predict the acceptance probability of your seat exchange request.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -115,7 +100,7 @@ const ExchangeForm = () => {
                       <div className="space-y-0.5">
                         <FormLabel className="text-base font-medium">Gender Match</FormLabel>
                         <FormDescription className="text-sm">
-                          Prefer same gender exchange?
+                          Is the other passenger same gender?
                         </FormDescription>
                       </div>
                       <FormControl>
@@ -223,6 +208,7 @@ const ExchangeForm = () => {
                     </FormItem>
                   )}
                 />
+
               </div>
 
               <Button
@@ -235,12 +221,12 @@ const ExchangeForm = () => {
                 {isLoading ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    Submitting...
+                    Analyzing...
                   </>
                 ) : (
                   <>
                     <Send className="h-5 w-5" />
-                    Find Exchange Matches
+                    Check Acceptance Probability
                   </>
                 )}
               </Button>
@@ -248,6 +234,8 @@ const ExchangeForm = () => {
           </Form>
         </CardContent>
       </Card>
+
+      {result && <PredictionResult result={result} />}
     </div>
   );
 };

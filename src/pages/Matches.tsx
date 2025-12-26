@@ -3,38 +3,35 @@ import { useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Users, ArrowLeft, RefreshCw, TrendingUp, MapPin, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+
+const API_BASE_URL = "http://127.0.0.1:5000";
 
 interface Match {
   id: number;
   probability: number;
   coachDistance: number;
   groupSize: number;
-  seatType: string;
+  seatType?: string;
 }
 
-// Generate mock matches for demo
-const generateMockMatches = (): Match[] => {
-  const seatTypes = ["Lower Berth", "Middle Berth", "Upper Berth", "Side Lower", "Side Upper"];
-  const matches: Match[] = [];
-  
-  for (let i = 0; i < 14; i++) {
-    matches.push({
-      id: i + 1,
-      probability: Math.round(70 + Math.random() * 25),
-      coachDistance: Math.floor(Math.random() * 4),
-      groupSize: Math.floor(Math.random() * 4) + 1,
-      seatType: seatTypes[Math.floor(Math.random() * seatTypes.length)],
-    });
-  }
-  
-  return matches.sort((a, b) => b.probability - a.probability);
-};
+interface PredictMatchesResponse {
+  total_analyzed: number;
+  willing_to_exchange: number;
+  matches: Array<{
+    passenger_id: number;
+    acceptance_probability: number;
+    coach_distance: number;
+    group_size: number;
+    seat_type?: string;
+  }>;
+}
 
 const getProbabilityColor = (probability: number) => {
   if (probability >= 85) return "text-success";
@@ -55,10 +52,56 @@ const getProbabilityBadge = (probability: number) => {
 };
 
 const Matches = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [matches, setMatches] = useState<Match[]>([]);
+  const [totalAnalyzed, setTotalAnalyzed] = useState(0);
+  const [willingToExchange, setWillingToExchange] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  const fetchMatches = async () => {
+    if (!user?.user_id) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/predict_matches`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_id: user.user_id }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch matches");
+      }
+
+      const data: PredictMatchesResponse = await response.json();
+      
+      setTotalAnalyzed(data.total_analyzed);
+      setWillingToExchange(data.willing_to_exchange);
+      
+      const formattedMatches: Match[] = data.matches.map((match, index) => ({
+        id: match.passenger_id || index + 1,
+        probability: Math.round(match.acceptance_probability),
+        coachDistance: match.coach_distance,
+        groupSize: match.group_size,
+        seatType: match.seat_type || "Berth",
+      }));
+      
+      setMatches(formattedMatches);
+    } catch (error) {
+      toast({
+        title: "Connection Error",
+        description: error instanceof Error ? error.message : "Could not fetch matches. Please ensure the Flask API is running.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -66,25 +109,12 @@ const Matches = () => {
       return;
     }
 
-    // Simulate API call
-    const timer = setTimeout(() => {
-      setMatches(generateMockMatches());
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, navigate]);
+    fetchMatches();
+  }, [isAuthenticated, navigate, user?.user_id]);
 
   const handleRefresh = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setMatches(generateMockMatches());
-      setIsLoading(false);
-    }, 1000);
+    fetchMatches();
   };
-
-  const totalAnalyzed = 100;
-  const willingToExchange = matches.length;
 
   return (
     <>
@@ -154,6 +184,19 @@ const Matches = () => {
                 <div className="text-center">
                   <RefreshCw className="mx-auto h-8 w-8 animate-spin text-primary" />
                   <p className="mt-4 text-muted-foreground">Analyzing passengers...</p>
+                </div>
+              </div>
+            ) : matches.length === 0 ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <Users className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <p className="mt-4 text-lg font-medium text-foreground">No matches found</p>
+                  <p className="mt-2 text-muted-foreground">
+                    Submit a seat exchange request first to find matches.
+                  </p>
+                  <Link to="/exchange" className="mt-4 inline-block">
+                    <Button variant="hero">Submit Request</Button>
+                  </Link>
                 </div>
               </div>
             ) : (

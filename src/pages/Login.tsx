@@ -36,12 +36,9 @@ const Login = () => {
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const result = await login(data.name, data.pnr);
 
-    const success = login(data.name, data.pnr);
-
-    if (success) {
+    if (result.success) {
       toast({
         title: "Welcome back!",
         description: "You have been successfully logged in.",
@@ -50,7 +47,7 @@ const Login = () => {
     } else {
       toast({
         title: "Login Failed",
-        description: "Invalid name or PNR number. Please check your credentials or register first.",
+        description: result.error || "Invalid name or PNR number. Please check your credentials or register first.",
         variant: "destructive",
       });
     }

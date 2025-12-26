@@ -1,13 +1,27 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Helmet } from "react-helmet-async";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import HeroSection from "@/components/home/HeroSection";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <>
+      <Helmet>
+        <title>Smart Seat Exchange for Indian Railways | AI-Powered Predictions</title>
+        <meta 
+          name="description" 
+          content="Request seat exchanges securely using AI predictions. Our intelligent system analyzes multiple factors to predict the likelihood of your exchange request being accepted."
+        />
+      </Helmet>
+      
+      <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="flex-1">
+          <HeroSection />
+        </main>
+        <Footer />
       </div>
-    </div>
+    </>
   );
 };
 

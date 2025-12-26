@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Users, ArrowLeft, RefreshCw, TrendingUp, MapPin, UsersRound, Award } from "lucide-react";
+import { Users, ArrowLeft, RefreshCw, TrendingUp, MapPin, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/layout/Header";
@@ -48,7 +48,7 @@ const getProbabilityBg = (probability: number) => {
   return "[&>div]:bg-accent";
 };
 
-const getProbabilityBadge = (probability: number): "success" | "warning" | "destructive" => {
+const getProbabilityBadge = (probability: number) => {
   if (probability >= 85) return "success";
   if (probability >= 75) return "warning";
   return "destructive";
@@ -93,7 +93,7 @@ const Matches = () => {
         <meta name="description" content="View passengers willing to exchange seats" />
       </Helmet>
 
-      <div className="flex min-h-screen flex-col bg-background">
+      <div className="flex min-h-screen flex-col">
         <Header />
 
         <main className="flex-1 py-8">
@@ -102,7 +102,7 @@ const Matches = () => {
             <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
                 <Link to="/dashboard">
-                  <Button variant="outline" size="icon" className="border-primary/30 hover:bg-primary/10 hover:text-primary">
+                  <Button variant="outline" size="icon">
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -115,7 +115,7 @@ const Matches = () => {
                   </p>
                 </div>
               </div>
-              <Button variant="outline" onClick={handleRefresh} disabled={isLoading} className="border-primary/30 hover:bg-primary/10 hover:text-primary">
+              <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
                 <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
                 Refresh
               </Button>
@@ -123,26 +123,26 @@ const Matches = () => {
 
             {/* Stats */}
             <div className="mb-8 grid gap-4 sm:grid-cols-2">
-              <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent shadow-lg">
+              <Card className="border-border/50">
                 <CardContent className="flex items-center gap-4 p-6">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-xl gradient-primary shadow-lg">
-                    <Users className="h-7 w-7 text-primary-foreground" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                    <Users className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total Passengers Analyzed</p>
-                    <p className="text-3xl font-bold text-primary">{totalAnalyzed}</p>
+                    <p className="text-sm text-muted-foreground">Total Passengers Analyzed</p>
+                    <p className="text-2xl font-bold text-foreground">{totalAnalyzed}</p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-success/20 bg-gradient-to-br from-success/5 to-transparent shadow-lg">
+              <Card className="border-success/20 bg-success/5">
                 <CardContent className="flex items-center gap-4 p-6">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-success shadow-lg shadow-success/30">
-                    <TrendingUp className="h-7 w-7 text-success-foreground" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/10">
+                    <TrendingUp className="h-6 w-6 text-success" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Willing to Exchange</p>
-                    <p className="text-3xl font-bold text-success">{willingToExchange} passengers</p>
+                    <p className="text-sm text-muted-foreground">Willing to Exchange</p>
+                    <p className="text-2xl font-bold text-success">{willingToExchange} passengers</p>
                   </div>
                 </CardContent>
               </Card>
@@ -150,50 +150,34 @@ const Matches = () => {
 
             {/* Matches List */}
             {isLoading ? (
-              <div className="flex items-center justify-center py-16">
+              <div className="flex items-center justify-center py-12">
                 <div className="text-center">
-                  <div className="relative mx-auto h-16 w-16">
-                    <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
-                    <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-                  </div>
-                  <p className="mt-6 text-lg font-medium text-muted-foreground">Analyzing passengers...</p>
+                  <RefreshCw className="mx-auto h-8 w-8 animate-spin text-primary" />
+                  <p className="mt-4 text-muted-foreground">Analyzing passengers...</p>
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Award className="h-5 w-5 text-primary" />
-                  <h2 className="text-lg font-semibold text-foreground">
-                    Ranked Matches (Highest Probability First)
-                  </h2>
-                </div>
+                <h2 className="text-lg font-semibold text-foreground">
+                  Ranked Matches (Highest Probability First)
+                </h2>
                 
                 <div className="grid gap-4">
                   {matches.map((match, index) => (
                     <Card 
                       key={match.id} 
-                      className={`border-2 transition-all hover:shadow-lg ${
-                        index === 0 
-                          ? "border-success/40 bg-gradient-to-r from-success/10 via-success/5 to-transparent shadow-lg" 
-                          : index < 3 
-                            ? "border-primary/30 bg-gradient-to-r from-primary/5 to-transparent" 
-                            : "border-border/50 hover:border-primary/30"
+                      className={`border-2 transition-all hover:shadow-md ${
+                        index === 0 ? "border-success/30 bg-success/5" : "border-border/50"
                       }`}
                     >
                       <CardContent className="p-4 sm:p-6">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                           <div className="flex items-center gap-4">
-                            <div className={`flex h-12 w-12 items-center justify-center rounded-full font-bold ${
-                              index === 0 
-                                ? "gradient-primary text-primary-foreground shadow-lg" 
-                                : index < 3 
-                                  ? "bg-primary/10 text-primary" 
-                                  : "bg-muted text-muted-foreground"
-                            }`}>
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted font-bold text-muted-foreground">
                               #{index + 1}
                             </div>
                             <div>
-                              <p className="font-semibold text-foreground">
+                              <p className="font-medium text-foreground">
                                 Passenger #{match.id}
                               </p>
                               <p className="text-sm text-muted-foreground">
@@ -202,13 +186,13 @@ const Matches = () => {
                             </div>
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-4">
-                            <div className="flex items-center gap-1.5 rounded-lg bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground">
-                              <MapPin className="h-4 w-4 text-primary" />
-                              <span>{match.coachDistance === 0 ? "Same Coach" : `${match.coachDistance} coaches`}</span>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                              <MapPin className="h-4 w-4" />
+                              <span>{match.coachDistance === 0 ? "Same Coach" : `${match.coachDistance} coaches away`}</span>
                             </div>
-                            <div className="flex items-center gap-1.5 rounded-lg bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground">
-                              <UsersRound className="h-4 w-4 text-primary" />
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                              <UsersRound className="h-4 w-4" />
                               <span>Group of {match.groupSize}</span>
                             </div>
                           </div>
@@ -217,12 +201,12 @@ const Matches = () => {
                             <div className="w-32">
                               <Progress 
                                 value={match.probability} 
-                                className={`h-2.5 bg-muted/50 ${getProbabilityBg(match.probability)}`}
+                                className={`h-2 ${getProbabilityBg(match.probability)}`}
                               />
                             </div>
                             <Badge 
-                              variant={getProbabilityBadge(match.probability)}
-                              className="min-w-[65px] justify-center text-sm font-bold"
+                              variant={getProbabilityBadge(match.probability) as any}
+                              className="min-w-[60px] justify-center"
                             >
                               {match.probability}%
                             </Badge>
@@ -236,10 +220,10 @@ const Matches = () => {
             )}
 
             {/* Back Button */}
-            <div className="mt-10 flex justify-center">
+            <div className="mt-8 flex justify-center">
               <Link to="/exchange">
-                <Button variant="outline" size="lg" className="border-2 border-primary/30 hover:bg-primary/10 hover:text-primary">
-                  <ArrowLeft className="h-5 w-5" />
+                <Button variant="outline">
+                  <ArrowLeft className="h-4 w-4" />
                   Submit New Request
                 </Button>
               </Link>

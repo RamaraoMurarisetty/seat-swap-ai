@@ -16,7 +16,6 @@ const formSchema = z.object({
   seatUpgrade: z.boolean(),
   coachDistance: z.coerce.number().min(0, "Must be 0 or greater"),
   requesterGroupSize: z.coerce.number().min(1, "Must be at least 1"),
-  otherGroupSize: z.coerce.number().min(1, "Must be at least 1"),
   travelDuration: z.coerce.number().min(0.5, "Must be at least 0.5 hours"),
 });
 
@@ -39,7 +38,6 @@ const ExchangeForm = () => {
       seatUpgrade: false,
       coachDistance: 0,
       requesterGroupSize: 1,
-      otherGroupSize: 1,
       travelDuration: 2,
     },
   });
@@ -59,7 +57,6 @@ const ExchangeForm = () => {
           seat_upgrade: data.seatUpgrade ? 1 : 0,
           coach_distance: data.coachDistance,
           requester_group_size: data.requesterGroupSize,
-          other_group_size: data.otherGroupSize,
           travel_duration: data.travelDuration,
         }),
       });
@@ -212,28 +209,6 @@ const ExchangeForm = () => {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="otherGroupSize"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-medium">Other Passenger's Group Size</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min={1}
-                          placeholder="1"
-                          className="h-12"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Number of people with the other passenger
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
 
               <Button

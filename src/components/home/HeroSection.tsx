@@ -1,4 +1,4 @@
-import { ArrowRight, Sparkles, Shield, Zap } from "lucide-react";
+import { ArrowRight, Sparkles, Shield, Zap, UserPlus, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -28,16 +28,22 @@ const HeroSection = () => {
           
           {/* Description */}
           <p className="animate-slide-up delay-200 mx-auto mb-10 max-w-2xl text-lg text-muted-foreground">
-            Request seat exchanges securely using AI predictions. Our intelligent system analyzes 
-            multiple factors to predict the likelihood of your exchange request being accepted.
+            Register with your PNR and let our AI analyze all passengers to find the best 
+            seat exchange matches. Machine learning compares your request with ~100 other travelers.
           </p>
           
-          {/* CTA Button */}
-          <div className="animate-slide-up delay-300">
+          {/* CTA Buttons */}
+          <div className="animate-slide-up delay-300 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Button asChild variant="hero" size="lg">
-              <Link to="/exchange" className="gap-2">
-                Request Seat Exchange
-                <ArrowRight className="h-5 w-5" />
+              <Link to="/register" className="gap-2">
+                <UserPlus className="h-5 w-5" />
+                Register Now
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link to="/login" className="gap-2">
+                <LogIn className="h-5 w-5" />
+                Login
               </Link>
             </Button>
           </div>
@@ -48,9 +54,9 @@ const HeroSection = () => {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <Zap className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="font-semibold text-foreground">Instant Predictions</h3>
+              <h3 className="font-semibold text-foreground">Batch Analysis</h3>
               <p className="text-sm text-muted-foreground">
-                Get acceptance probability in seconds
+                AI compares with ~100 passengers instantly
               </p>
             </div>
             
@@ -58,9 +64,9 @@ const HeroSection = () => {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/10">
                 <Shield className="h-6 w-6 text-success" />
               </div>
-              <h3 className="font-semibold text-foreground">Smart Analysis</h3>
+              <h3 className="font-semibold text-foreground">Smart Matching</h3>
               <p className="text-sm text-muted-foreground">
-                AI considers multiple exchange factors
+                Only high-probability matches shown
               </p>
             </div>
             
@@ -68,9 +74,9 @@ const HeroSection = () => {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10">
                 <Sparkles className="h-6 w-6 text-accent" />
               </div>
-              <h3 className="font-semibold text-foreground">No Login Required</h3>
+              <h3 className="font-semibold text-foreground">ML Powered</h3>
               <p className="text-sm text-muted-foreground">
-                Try instantly in demo mode
+                Trained on 100+ exchange records
               </p>
             </div>
           </div>

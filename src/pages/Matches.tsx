@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Users, ArrowLeft, RefreshCw, TrendingUp, MapPin, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,19 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 const API_BASE_URL = "http://127.0.0.1:5000";
 
 interface Match {
-  id: number;
-  probability: number;
-  coachDistance: number;
-  groupSize: number;
-  seatType: string;
-}
-
-interface ExchangePayload {
-  gender_match: number;
-  seat_upgrade: number;
-  coach_distance: number;
-  requester_group_size: number;
-  travel_duration: number;
+  target_user_id: number;
+  acceptance_probability: number;
 }
 
 const getProbabilityColor = (probability: number) => {
@@ -48,22 +37,23 @@ const getProbabilityBadge = (probability: number) => {
 };
 
 const Matches = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
   const [matches, setMatches] = useState<Match[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [totalAnalyzed, setTotalAnalyzed] = useState(0);
-  const [exchangePayload, setExchangePayload] = useState<ExchangePayload | null>(null);
+  const [willingToExchange, setWillingToExchange] = useState(0);
 
-  const fetchMatches = async (payload: ExchangePayload) => {
+  const fetchMatches = async () => {
+    if (!user?.user_id) return;
+    
     setIsLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/predict_matches`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ user_id: user.user_id }),
       });
 
       if (!response.ok) {
@@ -72,17 +62,9 @@ const Matches = () => {
 
       const data = await response.json();
       
-      // Transform backend response to match our interface
-      const transformedMatches: Match[] = (data.matches || []).map((match: any, index: number) => ({
-        id: match.id || index + 1,
-        probability: Math.round(match.acceptance_probability || match.probability || 0),
-        coachDistance: match.coach_distance || match.coachDistance || 0,
-        groupSize: match.group_size || match.groupSize || 1,
-        seatType: match.seat_type || match.seatType || "Berth",
-      }));
-
-      setMatches(transformedMatches.sort((a, b) => b.probability - a.probability));
-      setTotalAnalyzed(data.total_analyzed || data.totalAnalyzed || 100);
+      setMatches(data.matches || []);
+      setTotalAnalyzed(data.total_passengers_checked || 0);
+      setWillingToExchange(data.willing_to_exchange || 0);
     } catch (error) {
       toast({
         title: "Connection Error",
@@ -101,28 +83,12 @@ const Matches = () => {
       return;
     }
 
-    // Get payload from navigation state
-    const payload = location.state?.exchangePayload as ExchangePayload | undefined;
-    if (payload) {
-      setExchangePayload(payload);
-      fetchMatches(payload);
-    } else {
-      setIsLoading(false);
-      toast({
-        title: "No Request Data",
-        description: "Please submit an exchange request first.",
-        variant: "destructive",
-      });
-    }
-  }, [isAuthenticated, navigate, location.state]);
+    fetchMatches();
+  }, [isAuthenticated, navigate, user]);
 
   const handleRefresh = () => {
-    if (exchangePayload) {
-      fetchMatches(exchangePayload);
-    }
+    fetchMatches();
   };
-
-  const willingToExchange = matches.length;
 
   return (
     <>
@@ -201,58 +167,52 @@ const Matches = () => {
                 </h2>
                 
                 <div className="grid gap-4">
-                  {matches.map((match, index) => (
-                    <Card 
-                      key={match.id} 
-                      className={`border-2 transition-all hover:shadow-md ${
-                        index === 0 ? "border-success/30 bg-success/5" : "border-border/50"
-                      }`}
-                    >
-                      <CardContent className="p-4 sm:p-6">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted font-bold text-muted-foreground">
-                              #{index + 1}
-                            </div>
-                            <div>
-                              <p className="font-medium text-foreground">
-                                Passenger #{match.id}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                {match.seatType}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <MapPin className="h-4 w-4" />
-                              <span>{match.coachDistance === 0 ? "Same Coach" : `${match.coachDistance} coaches away`}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <UsersRound className="h-4 w-4" />
-                              <span>Group of {match.groupSize}</span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-4">
-                            <div className="w-32">
-                              <Progress 
-                                value={match.probability} 
-                                className={`h-2 ${getProbabilityBg(match.probability)}`}
-                              />
-                            </div>
-                            <Badge 
-                              variant={getProbabilityBadge(match.probability) as any}
-                              className="min-w-[60px] justify-center"
-                            >
-                              {match.probability}%
-                            </Badge>
-                          </div>
-                        </div>
+                  {matches.length === 0 ? (
+                    <Card className="border-border/50">
+                      <CardContent className="p-6 text-center">
+                        <p className="text-muted-foreground">No matches found above 70% probability threshold.</p>
                       </CardContent>
                     </Card>
-                  ))}
+                  ) : (
+                    matches.map((match, index) => (
+                      <Card 
+                        key={match.target_user_id} 
+                        className={`border-2 transition-all hover:shadow-md ${
+                          index === 0 ? "border-success/30 bg-success/5" : "border-border/50"
+                        }`}
+                      >
+                        <CardContent className="p-4 sm:p-6">
+                          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted font-bold text-muted-foreground">
+                                #{index + 1}
+                              </div>
+                              <div>
+                                <p className="font-medium text-foreground">
+                                  Passenger #{match.target_user_id}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                              <div className="w-32">
+                                <Progress 
+                                  value={match.acceptance_probability} 
+                                  className={`h-2 ${getProbabilityBg(match.acceptance_probability)}`}
+                                />
+                              </div>
+                              <Badge 
+                                variant={getProbabilityBadge(match.acceptance_probability) as any}
+                                className="min-w-[60px] justify-center"
+                              >
+                                {match.acceptance_probability}%
+                              </Badge>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
                 </div>
               </div>
             )}

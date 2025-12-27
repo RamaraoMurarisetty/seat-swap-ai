@@ -9,13 +9,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   genderMatch: z.boolean(),
   seatUpgrade: z.boolean(),
   coachDistance: z.coerce.number().min(0, "Must be 0 or greater"),
-  requesterGroupSize: z.coerce.number().min(1, "Must be at least 1"),
-  travelDuration: z.coerce.number().min(0.5, "Must be at least 0.5 hours"),
+  groupSize: z.coerce.number().min(1, "Must be at least 1"),
+  travelHours: z.coerce.number().min(1, "Must be at least 1 hour"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -23,6 +25,8 @@ type FormValues = z.infer<typeof formSchema>;
 const ExchangeForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { submitRequest } = useAuth();
+  const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -30,8 +34,8 @@ const ExchangeForm = () => {
       genderMatch: false,
       seatUpgrade: false,
       coachDistance: 0,
-      requesterGroupSize: 1,
-      travelDuration: 2,
+      groupSize: 1,
+      travelHours: 2,
     },
   });
 
@@ -42,12 +46,28 @@ const ExchangeForm = () => {
       gender_match: data.genderMatch ? 1 : 0,
       seat_upgrade: data.seatUpgrade ? 1 : 0,
       coach_distance: data.coachDistance,
-      requester_group_size: data.requesterGroupSize,
-      travel_duration: data.travelDuration,
+      group_size: data.groupSize,
+      travel_hours: data.travelHours,
     };
 
-    // Navigate to matches page with the payload
-    navigate("/matches", { state: { exchangePayload: payload } });
+    // First submit the request to the backend
+    const result = await submitRequest(payload);
+    
+    if (result.success) {
+      toast({
+        title: "Request Submitted",
+        description: "Finding exchange matches...",
+      });
+      // Navigate to matches page
+      navigate("/matches");
+    } else {
+      toast({
+        title: "Submission Failed",
+        description: result.error || "Failed to submit request",
+        variant: "destructive",
+      });
+    }
+    
     setIsLoading(false);
   };
 
@@ -135,15 +155,15 @@ const ExchangeForm = () => {
 
                 <FormField
                   control={form.control}
-                  name="travelDuration"
+                  name="travelHours"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="font-medium">Travel Duration (hours)</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
-                          min={0.5}
-                          step={0.5}
+                          min={1}
+                          step={1}
                           placeholder="e.g., 4"
                           className="h-12"
                           {...field}
@@ -161,7 +181,7 @@ const ExchangeForm = () => {
               <div className="grid gap-6 sm:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="requesterGroupSize"
+                  name="groupSize"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="font-medium">Your Group Size</FormLabel>
@@ -181,7 +201,6 @@ const ExchangeForm = () => {
                     </FormItem>
                   )}
                 />
-
               </div>
 
               <Button

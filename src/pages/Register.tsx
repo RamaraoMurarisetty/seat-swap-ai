@@ -36,12 +36,9 @@ const Register = () => {
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const result = await registerUser(data.name, data.pnr);
 
-    const success = registerUser(data.name, data.pnr);
-
-    if (success) {
+    if (result.success) {
       toast({
         title: "Registration Successful",
         description: "Your account has been created. Please login to continue.",
@@ -50,7 +47,7 @@ const Register = () => {
     } else {
       toast({
         title: "Registration Failed",
-        description: "A passenger with this PNR already exists. Please login instead.",
+        description: result.error || "Registration failed. Please try again.",
         variant: "destructive",
       });
     }

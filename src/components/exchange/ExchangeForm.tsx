@@ -1,15 +1,14 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
-import PredictionResult from "./PredictionResult";
 
 const formSchema = z.object({
   genderMatch: z.boolean(),
@@ -21,15 +20,9 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface PredictionResponse {
-  acceptance_probability: number;
-  decision: string;
-}
-
 const ExchangeForm = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<PredictionResponse | null>(null);
-  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -44,38 +37,18 @@ const ExchangeForm = () => {
 
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
-    setResult(null);
 
-    try {
-      const response = await fetch("http://127.0.0.1:5000/predict", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          gender_match: data.genderMatch ? 1 : 0,
-          seat_upgrade: data.seatUpgrade ? 1 : 0,
-          coach_distance: data.coachDistance,
-          requester_group_size: data.requesterGroupSize,
-          travel_duration: data.travelDuration,
-        }),
-      });
+    const payload = {
+      gender_match: data.genderMatch ? 1 : 0,
+      seat_upgrade: data.seatUpgrade ? 1 : 0,
+      coach_distance: data.coachDistance,
+      requester_group_size: data.requesterGroupSize,
+      travel_duration: data.travelDuration,
+    };
 
-      if (!response.ok) {
-        throw new Error("Failed to get prediction");
-      }
-
-      const result: PredictionResponse = await response.json();
-      setResult(result);
-    } catch (error) {
-      toast({
-        title: "Connection Error",
-        description: "Could not connect to the prediction server. Please ensure the Flask API is running.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // Navigate to matches page with the payload
+    navigate("/matches", { state: { exchangePayload: payload } });
+    setIsLoading(false);
   };
 
   return (
@@ -221,12 +194,12 @@ const ExchangeForm = () => {
                 {isLoading ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    Analyzing...
+                    Finding Matches...
                   </>
                 ) : (
                   <>
-                    <Send className="h-5 w-5" />
-                    Check Acceptance Probability
+                    <Search className="h-5 w-5" />
+                    Find Exchange Matches
                   </>
                 )}
               </Button>
@@ -235,7 +208,6 @@ const ExchangeForm = () => {
         </CardContent>
       </Card>
 
-      {result && <PredictionResult result={result} />}
     </div>
   );
 };

@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
+const API_BASE_URL = "http://127.0.0.1:5000";
+
 interface User {
   name: string;
   pnr: string;
@@ -8,62 +10,66 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (name: string, pnr: string) => boolean;
-  register: (name: string, pnr: string) => boolean;
+  login: (name: string, pnr: string) => Promise<{ success: boolean; error?: string }>;
+  register: (name: string, pnr: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const USERS_KEY = "seat_exchange_users";
 const CURRENT_USER_KEY = "seat_exchange_current_user";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // Check for existing session
     const storedUser = localStorage.getItem(CURRENT_USER_KEY);
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
   }, []);
 
-  const getUsers = (): User[] => {
-    const users = localStorage.getItem(USERS_KEY);
-    return users ? JSON.parse(users) : [];
-  };
+  const register = async (name: string, pnr: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, pnr }),
+      });
 
-  const saveUsers = (users: User[]) => {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  };
+      const data = await response.json();
 
-  const register = (name: string, pnr: string): boolean => {
-    const users = getUsers();
-    const exists = users.some((u) => u.pnr === pnr);
-    
-    if (exists) {
-      return false; // User already exists
+      if (response.ok) {
+        return { success: true };
+      } else {
+        return { success: false, error: data.error || "Registration failed" };
+      }
+    } catch (error) {
+      return { success: false, error: "Could not connect to server. Please ensure the Flask API is running." };
     }
-
-    const newUser = { name: name.trim(), pnr };
-    users.push(newUser);
-    saveUsers(users);
-    return true;
   };
 
-  const login = (name: string, pnr: string): boolean => {
-    const users = getUsers();
-    const foundUser = users.find(
-      (u) => u.pnr === pnr && u.name.toLowerCase() === name.trim().toLowerCase()
-    );
+  const login = async (name: string, pnr: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, pnr }),
+      });
 
-    if (foundUser) {
-      setUser(foundUser);
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(foundUser));
-      return true;
+      const data = await response.json();
+
+      if (response.ok) {
+        const loggedInUser = { name: data.name || name, pnr };
+        setUser(loggedInUser);
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(loggedInUser));
+        return { success: true };
+      } else {
+        return { success: false, error: data.error || "Login failed" };
+      }
+    } catch (error) {
+      return { success: false, error: "Could not connect to server. Please ensure the Flask API is running." };
     }
-    return false;
   };
 
   const logout = () => {

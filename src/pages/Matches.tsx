@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Users, ArrowLeft, RefreshCw, TrendingUp, MapPin, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+
+const API_BASE_URL = "http://127.0.0.1:5000";
 
 interface Match {
   id: number;
@@ -18,23 +21,13 @@ interface Match {
   seatType: string;
 }
 
-// Generate mock matches for demo
-const generateMockMatches = (): Match[] => {
-  const seatTypes = ["Lower Berth", "Middle Berth", "Upper Berth", "Side Lower", "Side Upper"];
-  const matches: Match[] = [];
-  
-  for (let i = 0; i < 14; i++) {
-    matches.push({
-      id: i + 1,
-      probability: Math.round(70 + Math.random() * 25),
-      coachDistance: Math.floor(Math.random() * 4),
-      groupSize: Math.floor(Math.random() * 4) + 1,
-      seatType: seatTypes[Math.floor(Math.random() * seatTypes.length)],
-    });
-  }
-  
-  return matches.sort((a, b) => b.probability - a.probability);
-};
+interface ExchangePayload {
+  gender_match: number;
+  seat_upgrade: number;
+  coach_distance: number;
+  requester_group_size: number;
+  travel_duration: number;
+}
 
 const getProbabilityColor = (probability: number) => {
   if (probability >= 85) return "text-success";
@@ -57,8 +50,50 @@ const getProbabilityBadge = (probability: number) => {
 const Matches = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { toast } = useToast();
   const [matches, setMatches] = useState<Match[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [totalAnalyzed, setTotalAnalyzed] = useState(0);
+  const [exchangePayload, setExchangePayload] = useState<ExchangePayload | null>(null);
+
+  const fetchMatches = async (payload: ExchangePayload) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/predict_matches`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch matches");
+      }
+
+      const data = await response.json();
+      
+      // Transform backend response to match our interface
+      const transformedMatches: Match[] = (data.matches || []).map((match: any, index: number) => ({
+        id: match.id || index + 1,
+        probability: Math.round(match.acceptance_probability || match.probability || 0),
+        coachDistance: match.coach_distance || match.coachDistance || 0,
+        groupSize: match.group_size || match.groupSize || 1,
+        seatType: match.seat_type || match.seatType || "Berth",
+      }));
+
+      setMatches(transformedMatches.sort((a, b) => b.probability - a.probability));
+      setTotalAnalyzed(data.total_analyzed || data.totalAnalyzed || 100);
+    } catch (error) {
+      toast({
+        title: "Connection Error",
+        description: "Could not connect to the prediction server. Please ensure the Flask API is running.",
+        variant: "destructive",
+      });
+      setMatches([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -66,24 +101,27 @@ const Matches = () => {
       return;
     }
 
-    // Simulate API call
-    const timer = setTimeout(() => {
-      setMatches(generateMockMatches());
+    // Get payload from navigation state
+    const payload = location.state?.exchangePayload as ExchangePayload | undefined;
+    if (payload) {
+      setExchangePayload(payload);
+      fetchMatches(payload);
+    } else {
       setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, navigate]);
+      toast({
+        title: "No Request Data",
+        description: "Please submit an exchange request first.",
+        variant: "destructive",
+      });
+    }
+  }, [isAuthenticated, navigate, location.state]);
 
   const handleRefresh = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setMatches(generateMockMatches());
-      setIsLoading(false);
-    }, 1000);
+    if (exchangePayload) {
+      fetchMatches(exchangePayload);
+    }
   };
 
-  const totalAnalyzed = 100;
   const willingToExchange = matches.length;
 
   return (
